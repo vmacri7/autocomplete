@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoComplete++</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    
+</head>
+<body>
+    <div class="min-h-screen bg-zinc-50 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 pb-16">
+        <!-- Welcome Panel -->
+        <div id="welcomePanel" class="fixed inset-0 flex justify-center items-center z-50 bg-gray-400 bg-opacity-80 backdrop-blur-sm transition-opacity duration-500 ease-out opacity-100">
+            <div class="bg-gray-800 rounded-lg shadow-xl p-10 text-center max-w-lg">
+                <h2 class="text-2xl font-bold mb-4">👋 Welcome to AutoComplete<strong class="text-green-300"><span>++</span></strong> </h2>
+                <p class="mb-8">AutoComplete++ is a tool that lets you write <strong class="text-blue-300"><span>with</span></strong> AI rather than having AI write for you.</p>
+                <p class="mb-8">All you need to get started is an API key from <a class="text-green-300" target=_blank style="text-decoration:underline;" href=https://console.groq.com/keys>groq.com</a>.  Dont worry all usage is <strong class="text-blue-300"><span>free</span></strong>  while they are in beta!</p>
+                <p class="mb-8">You will use this API key to power your <strong class="text-green-300"><span>AI autocomplete</span></strong>. Once you submit your API key in settings, just start typing. </p>
+                <p class="mb-8">Press the <strong class="text-blue-300"><span>tab</span></strong> key to accept AI generated completions or just keep typing!</p>
+                <button onclick="closeWelcomePanel()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                    Continue
+                </button>
+            </div>
+        </div>
+        
+
+        <div class="max-w-4xl mx-auto p-4">
+            <h1 class="text-4xl font-bold text-center mb-8 border-4 border-zinc-600 rounded-lg p-3">AutoComplete<strong class="text-green-300"><span>++</span></strong></h1>
+            <details class="mb-6 bg-white dark:bg-zinc-800 shadow-lg rounded-lg overflow-hidden">
+                <summary class="cursor-pointer text-xl py-4 px-6 bg-blue-500 text-white hover:bg-blue-600 flex justify-between items-center w-full">
+                  Settings 
+                  <span class="mr-2" id="apiKeyStatus"></span>
+                </summary>
+                <div class="p-6">
+                    <div class="mb-6">
+                        <label for="api-key" class="block mb-2 text-lg ">Groq API Key:</label>
+                        <div class="flex">
+                            <input
+                              id="api-key"
+                              type="password"
+                              class="flex-grow-0 flex-shrink-0 basis-4/5 p-3 border border-zinc-300 dark:border-zinc-700 text-black rounded-l-md"
+                              placeholder="Enter your API key here"
+                            />
+                            <button onclick="submitApiKey()" class="flex-grow-0 flex-shrink-0 basis-1/5 ml-2 p-3 bg-zinc-800 text-white border-green-400 border-4 rounded-r-md"><strong>Submit</strong></button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="model-selector" class="block mb-2 text-lg">Select Model:</label>
+                        <select
+                          id="model-selector"
+                          class="w-full p-3 border-4 border-zinc-300 dark:border-zinc-700 rounded-md bg-white dark:bg-zinc-800"
+                        >
+                          <option value="llama3-8b-8192">llama3-8B</option>
+                          <option value="llama3-70b-8192">llama3-70B</option>
+                          <option value="mixtral-8x7b-32768">mixtral-8x7B</option>
+                        </select>
+                    </div>
+                </div>
+            </details>
+    
+            <div class="mb-6">
+                <div 
+                class="w-full h-64 p-4 border border-zinc-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800 overflow-auto"
+                id="inputArea" contenteditable="true" data-placeholder="Start typing here..."></div>
+            </div>
+    
+            <div class="bg-white dark:bg-zinc-800 p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-semibold mb-4">Stats</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>Input Tokens: <span id="inputTokenCount" class="font-semibold">0</span></div>
+                    <div>Output Tokens: <span id="outputTokenCount" class="font-semibold">0</span></div>
+                    <div>Request Count: <span id="requestCount" class="font-semibold">0</span></div>
+                    <div>Theoretical Cost: <span id="totalCost" class="font-semibold">$0.00</span></div>
+                </div>              
+            </div>
+        </div>
+        <div class="fixed inset-x-0 bottom-0 bg-blue-500 text-white text-center py-3 flex justify-between items-center px-4">
+            <a href="https://github.com/vmacri7" target="_blank" class="text-white hover:text-gray-300">
+                <i class="fab fa-github"></i> <!-- GitHub Icon -->
+            </a>
+            <p>
+                <a href="https://vmacri.com" target="_blank">vmacri.com 🚀</a> | 
+                <a href="https://buymeacoffee.com/vincenzoam1" target="_blank">
+                    buy me a coffee :) <span class="animate-wiggle">☕</span> <!-- Coffee Icon -->
+                </a>
+            </p>            
+            <a href="https://twitter.com/vinsudo" target="_blank" class="text-white hover:text-gray-300">
+                <i class="fa-brands fa-x-twitter"></i> <!-- Close Icon -->
+            </a>
+        </div>
+        
+    </div>
+
+
+      <style>
+        .user-text { color: white; }
+        .ai-text { color: rgb(157, 157, 157); }
+
+        @keyframes wiggle {
+            0% { transform: rotate(0deg) scale(1); }
+            75% { transform: rotate(0deg) scale(1); }
+            80% { transform: rotate(10deg) scale(1.1); }
+            85% { transform: rotate(-10deg) scale(1.1); }
+            90% { transform: rotate(10deg) scale(1.1); }
+            95% { transform: rotate(-10deg) scale(1.1); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+
+        .animate-wiggle {
+        display: inline-block;
+        animation: wiggle 5s infinite;
+        }
+
+        .animate-wiggle:hover {
+        animation: none;
+        }
+
+        [contenteditable="true"]:empty::before {
+        content: attr(data-placeholder);
+        color: gray; 
+        display: block; 
+        pointer-events: none; 
+        }
+
+        [contenteditable="true"]:focus::before {
+            content: '';
+        }
+
+      </style>
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+
+
+        function updateApiKeyStatus() {
+                const apiKey = sessionStorage.getItem('apiKey');
+                const statusIcon = document.getElementById('apiKeyStatus');
+                if (apiKey) {
+                    statusIcon.innerHTML = 'API Status <i class="fas fa-check-circle text-green-500"></i>'; // Checkmark icon for stored API key
+                } else {
+                    statusIcon.innerHTML = 'API Status <i class="fas fa-times-circle text-red-500"></i>'; // 'X' icon for no API key
+                }
+            }
+
+        function submitApiKey() {
+            const apiKey = document.getElementById('api-key').value;
+            sessionStorage.setItem('apiKey', apiKey); // Store API key in sessionStorage
+            updateApiKeyStatus(); // Update the icon on page load
+            alert('API Key Submitted and Stored.');
+        }
+
+        function closeWelcomePanel() {
+            const panel = document.getElementById('welcomePanel');
+            panel.style.opacity = '0'; // Start the fade-out
+            setTimeout(() => {
+                panel.style.display = 'none'; // Hide after transition
+            }, 500); // Match the duration-500 from Tailwind
+        }
+
+
+        $(document).ready(function() {
+            let userText = '';
+            let aiText = '';
+            let aiActive = false;
+            let requestCount = 0;
+            let inputTokens = 0;
+            let outputTokens = 0;
+
+            updateApiKeyStatus();
+
+            const inputArea = document.getElementById('inputArea');
+
+            // Reset placeholder logic when the content is changed
+            inputArea.addEventListener('input', function() {
+                if (this.textContent.trim() === '') {
+                    this.innerHTML = '';
+                }
+            });
+
+            // Remove placeholder text when the area is focused and is empty
+            inputArea.addEventListener('focus', function() {
+                if (this.textContent.trim() === '') {
+                    this.innerHTML = '';
+                }
+            });
+
+            // Reinsert placeholder if empty on blur
+            inputArea.addEventListener('blur', function() {
+                if (this.textContent.trim() === '') {
+                    this.innerHTML = '';
+                }
+            });
+    
+            function updateCursor() {
+                let userTextNode = document.querySelector('.user-text');
+                if (userTextNode && userTextNode.firstChild) {
+                    let range = document.createRange();
+                    let sel = window.getSelection();
+                    range.setStart(userTextNode.firstChild, userText.length);
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                }
+            }
+    
+            function updateTextArea() {
+                if (aiActive) {
+                    inputArea.innerHTML = '<span class="user-text">' + userText + '</span>' +
+                                          '<span class="ai-text">' + aiText + '</span>';
+                } else {
+                    inputArea.innerHTML = '<span class="user-text">' + userText + '</span>';
+                }
+                updateCursor();
+            }
+
+            function updateStats() {
+                $("#requestCount").text(requestCount);
+                $("#inputTokenCount").text(inputTokens);
+                $("#outputTokenCount").text(outputTokens);
+            }
+    
+            $('#inputArea').on('input', function(e) {
+                const fullText = $(this).text();
+                const currentTextWithoutAI = fullText.replace(aiText, ''); // Remove AI text for checking
+    
+                if (aiActive && currentTextWithoutAI !== userText) {
+                    // Detect if user text has changed and it is not just an addition of AI text
+                    userText = currentTextWithoutAI; // Update userText to current modified content
+                    aiText = ''; // Clear AI text
+                    aiActive = false; // Reset AI active flag
+                    updateTextArea(); // Update the display
+                } else if (!aiActive) {
+                    userText = fullText; // Update userText normally if AI text isn't active
+                }
+            });
+    
+            $('#inputArea').on('keydown', function(e) {
+                if (e.key === ' ' || e.key === 'Spacebar') {
+                    setTimeout(() => {
+                        const tempText = inputArea.textContent; // Get updated text from input area
+                        const wordCount = tempText.trim().split(/\s+/).length;
+                        if (wordCount >= 5) {
+                            fetchCompletion(tempText.trim());
+                        }
+                    }, 10); // Short delay to ensure text update completes
+                } else if (e.key === 'Tab') {
+                    e.preventDefault(); // Prevent the default tab key behavior
+                    if (aiText) {
+                        const nextWord = aiText.split(' ')[0];
+                        const remainingText = aiText.slice(nextWord.length).trim();
+                        userText += nextWord + ' ';
+                        aiText = remainingText;
+                        aiActive = (aiText.length > 0);
+                        updateTextArea();
+                    }
+                }
+            });
+    
+            function calculateCost(model, inputTokens, outputTokens) {
+                let costPerMillionInputTokens = 0;
+                let costPerMillionOutputTokens = 0;
+                if (model === 'llama3-8b-8192') {
+                    costPerMillionInputTokens = 0.05;
+                    costPerMillionOutputTokens = 0.10;
+                } else if (model === 'llama3-70b-8192') {
+                    costPerMillionInputTokens = 0.59;
+                    costPerMillionOutputTokens = 0.79;
+                } else if (model === 'mixtral-8x7b-32768') {
+                    costPerMillionInputTokens = 0.27;
+                    costPerMillionOutputTokens = 0.27;
+                }
+                return (((inputTokens * costPerMillionInputTokens) + (outputTokens * costPerMillionOutputTokens) ) / 1_000_000);
+            }
+
+            function fetchCompletion(userInput) {
+                model = $('#model-selector').val();
+                $.ajax({
+                    url: "https://api.groq.com/openai/v1/chat/completions",
+                    type: 'POST',
+                    contentType: 'application/json',
+                    headers: { 'Authorization': `Bearer ${sessionStorage.getItem('apiKey')}` },
+                    data: JSON.stringify({
+                        "messages": [{"role": "system", "content": "Continue the following text provided by the user, starting immediately from the next word or letter. Do not repeat the initial input but seamlessly extend the sentence or thought with a few informative and coherent sentences. Consider the implied context and subject matter in the user’s input to ensure a logical and relevant continuation.  Do not start with ..."}, {"role": "user", "content": userInput}],
+                        "model": model
+                    }),
+                    success: function(response) {
+                        aiText = response.choices[0].message.content;
+                        aiActive = true;
+                        requestCount++; 
+                        inputTokens += response.usage.prompt_tokens
+                        outputTokens += response.usage.completion_tokens
+                        const totalCost = calculateCost(model, inputTokens, outputTokens);
+                        $("#totalCost").text(`$${totalCost}`);
+                        updateStats();
+                        updateTextArea();
+                    },
+                    error: function(error) {
+                        let errorMsg = 'Unknown error occurred.';
+                        if (error && error.responseJSON && error.responseJSON.error && error.responseJSON.error.message) {
+                            errorMsg = 'Error: ' + error.responseJSON.error.message;
+                        } else if (error && error.responseText) {
+                            errorMsg = 'Error: ' + error.responseText;
+                        }
+                        console.error(errorMsg);
+                        alert(errorMsg);
+                    }
+                });
+            }
+
+        });
+    </script>
+    
+    
+</body>
+</html>
